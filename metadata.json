@@ -1,0 +1,9 @@
+{
+  "name": "SHIESTY . ME :: SPERENZA  GOOPERS",
+  "description": "SHiESTY - SPERANZA The ultimate companion for GOOPERS. Track stats, raids, and trades.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": []
+}

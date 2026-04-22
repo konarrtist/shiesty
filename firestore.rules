@@ -1,0 +1,105 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Primitive Definitions ---
+    function isValidId(id) { return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+
+    // --- Validation Blueprints ---
+
+    function isValidUser(data, isCreate) {
+      let isUsernameValid = data.username is string && data.username.size() > 0 && data.username.size() <= 64;
+      let isDiscordValid = data.discordId is string && data.discordId.size() > 0 && data.discordId.size() <= 64;
+      // Force default role on create, immutable on update
+      let isRoleValid = data.role == 'Operative';
+      let isMetaForgeValid = data.metaForgeId is string && data.metaForgeId.size() <= 64;
+      let isArcTrackerValid = data.arcTrackerKey is string && data.arcTrackerKey.size() <= 64;
+      let isAvatarValid = (!('avatar' in data) || (data.avatar is string && data.avatar.size() <= 500));
+      let isStatusValid = (!('status' in data) || (data.status is string && data.status.size() <= 64));
+      let isLastActiveValid = (!('lastActive' in data) || (data.lastActive is string && data.lastActive.size() <= 64));
+      
+      let baseValid = isUsernameValid && isDiscordValid && isRoleValid && isMetaForgeValid && isArcTrackerValid && isAvatarValid && isStatusValid && isLastActiveValid;
+      
+      return baseValid && (isCreate ? (data.keys().hasAll(['username', 'discordId', 'role', 'metaForgeId', 'arcTrackerKey']) && data.keys().size() <= 8) : true);
+    }
+
+    function isValidListing(data, isCreate) {
+      let isSellerIdValid = data.sellerId == request.auth.uid;
+      let isSellerDiscordValid = (!('sellerDiscordId' in data) || (data.sellerDiscordId is string && data.sellerDiscordId.size() <= 64));
+      let isItemValid = data.itemName is string && data.itemName.size() > 0 && data.itemName.size() <= 128;
+      let isItemIdValid = (!('itemId' in data) || (data.itemId is string && data.itemId.size() <= 128));
+      let isRarityValid = (!('rarity' in data) || (data.rarity is string && data.rarity.size() <= 64));
+      let isQuantityValid = data.quantity is number && data.quantity > 0 && data.quantity <= 10000;
+      let isPriceValid = data.price is number && data.price >= 0;
+      let isCreatedAtValid = (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 64));
+      
+      let baseValid = isSellerIdValid && isSellerDiscordValid && isItemValid && isItemIdValid && isRarityValid && isQuantityValid && isPriceValid && isCreatedAtValid;
+
+      return baseValid && (isCreate ? (data.keys().hasAll(['sellerId', 'itemName', 'quantity', 'price']) && data.keys().size() <= 8) : true);
+    }
+
+    function isValidRep(data, isCreate) {
+      let isTraderValid = data.traderId is string && data.traderId.size() > 0 && data.traderId.size() <= 128 && isValidId(data.traderId);
+      let isTraderNameValid = (!('traderName' in data) || (data.traderName is string && data.traderName.size() <= 64));
+      let isRatingValid = data.rating is number && data.rating >= 1 && data.rating <= 5;
+      let isCommentValid = (!('comment' in data) || (data.comment is string && data.comment.size() <= 500));
+      let isAddedByValid = data.addedBy == request.auth.uid;
+      let isAddedByNameValid = (!('addedByName' in data) || (data.addedByName is string && data.addedByName.size() <= 64));
+      let isCreatedAtValid = (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 64));
+
+      let baseValid = isTraderValid && isTraderNameValid && isRatingValid && isCommentValid && isAddedByValid && isAddedByNameValid && isCreatedAtValid;
+
+      return baseValid && (isCreate ? (data.keys().hasAll(['traderId', 'rating', 'addedBy']) && data.keys().size() <= 7) : true);
+    }
+
+    // --- Collections ---
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId);
+      allow list: if isSignedIn(); // We can allow signed in to list profiles for the directory
+      
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidId(userId) && isValidUser(incoming(), true);
+      
+      allow update: if isSignedIn() && request.auth.uid == userId && isValidId(userId) && isValidUser(incoming(), false) && (
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'status', 'lastActive', 'metaForgeId', 'arcTrackerKey', 'username', 'avatar', 'discordId'
+        ])
+      );
+    }
+
+    match /market_listings/{listingId} {
+      allow get: if isSignedIn() && isValidId(listingId);
+      allow list: if isSignedIn(); // View all market
+      
+      allow create: if isSignedIn() && isValidId(listingId) && isValidListing(incoming(), true) && 
+                    exists(/databases/$(database)/documents/users/$(request.auth.uid));
+      
+      allow update: if isSignedIn() && isValidId(listingId) && existing().sellerId == request.auth.uid && 
+                    isValidListing(incoming(), false) &&
+                    incoming().sellerId == existing().sellerId && // Immutability
+                    incoming().diff(existing()).affectedKeys().hasOnly(['price', 'quantity', 'itemName']);
+      
+      allow delete: if isSignedIn() && isValidId(listingId) && existing().sellerId == request.auth.uid;
+    }
+
+    match /reputation/{repId} {
+      allow get: if isSignedIn() && isValidId(repId);
+      allow list: if isSignedIn(); // View traders rep
+      
+      allow create: if isSignedIn() && isValidId(repId) && isValidRep(incoming(), true) && 
+                    incoming().traderId != request.auth.uid && // No self rep
+                    exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                    exists(/databases/$(database)/documents/users/$(incoming().traderId)); // Valid target
+                    
+      allow update: if false; // Reputation is append-only
+      allow delete: if isSignedIn() && isValidId(repId) && existing().addedBy == request.auth.uid;
+    }
+  }
+}

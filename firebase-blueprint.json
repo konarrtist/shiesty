@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Public profile for a SHiESTY operative.",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string", "description": "Display name of the raider." },
+        "discordId": { "type": "string", "description": "Linked Discord ID for messaging." },
+        "avatar": { "type": "string", "description": "Profile picture URL." },
+        "metaforgeId": { "type": "string", "description": "Associated Xbox/MetaForge UID." },
+        "role": { "type": "string", "enum": ["Operative", "Admin"], "description": "System access level." },
+        "status": { "type": "string", "description": "Current status (e.g., DEPLOYED)." },
+        "lastActive": { "type": "string", "format": "date-time" }
+      },
+      "required": ["username", "discordId"]
+    },
+    "MarketListing": {
+      "title": "Marketplace Listing",
+      "description": "Item put up for trade by an operative.",
+      "type": "object",
+      "properties": {
+        "sellerId": { "type": "string", "description": "UID of the raider selling the item." },
+        "sellerDiscordId": { "type": "string", "description": "Discord ID for direct contact." },
+        "itemName": { "type": "string" },
+        "itemId": { "type": "string" },
+        "rarity": { "type": "string" },
+        "quantity": { "type": "number" },
+        "price": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["sellerId", "itemName", "quantity"]
+    },
+    "Reputation": {
+      "title": "Trader Reputation",
+      "description": "Feedback for trades within the syndicate.",
+      "type": "object",
+      "properties": {
+        "traderId": { "type": "string", "description": "UID of the user receiving the rep." },
+        "traderName": { "type": "string" },
+        "rating": { "type": "number", "minimum": 1, "maximum": 5 },
+        "comment": { "type": "string" },
+        "addedBy": { "type": "string", "description": "UID of the user giving the rep." },
+        "addedByName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["traderId", "rating", "addedBy"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Raider profiles."
+    },
+    "/market_listings/{listingId}": {
+      "schema": "MarketListing",
+      "description": "Public trade offers."
+    },
+    "/reputation/{repId}": {
+      "schema": "Reputation",
+      "description": "Syndicate trust scores."
+    }
+  }
+}

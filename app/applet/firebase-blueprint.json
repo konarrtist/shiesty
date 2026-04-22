@@ -1,0 +1,47 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Discord user profile and settings",
+      "type": "object",
+      "properties": {
+        "discordId": { "type": "string" },
+        "username": { "type": "string" },
+        "avatar": { "type": "string" },
+        "arcTrackerUserKey": { "type": "string" },
+        "secondaryArcTrackerKey": { "type": "string" },
+        "useSecondaryForTrading": { "type": "boolean" },
+        "currentLoadoutCost": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["discordId", "username", "createdAt"]
+    },
+    "Raid": {
+      "title": "Raid",
+      "description": "Raid history record",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "raidId": { "type": "string" },
+        "map": { "type": "string" },
+        "outcome": { "type": "string", "enum": ["extracted", "eliminated"] },
+        "kills": { "type": "number" },
+        "valueExtracted": { "type": "number" },
+        "loadoutCost": { "type": "number" },
+        "profit": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "raidId", "outcome", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/users/{userId}/raids/{raidId}": {
+      "schema": "Raid",
+      "description": "User raid history"
+    }
+  }
+}
