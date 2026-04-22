@@ -1,9 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
 import { fetchStats } from "../lib/api";
+import { usePlayer } from "../context/PlayerContext";
 import { 
   Book, Crosshair, TrendingUp, Skull, Timer, Briefcase, ChevronRight, Activity, Map, Monitor,
   LayoutDashboard, Swords, Target, Shield, HeartPulse, Zap, Database, Search, Filter, Info,
-  Box, Cpu, Flame, Wind, Droplets, Globe
+  Box, Cpu, Flame, Wind, Droplets, Globe, CircleDollarSign
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchArcItems, fetchArcBots, fetchArcMaps } from "../services/arcData";
@@ -53,26 +54,14 @@ const ProgressBar = ({ label, value, max, color = "#39FF14" }: { label: string, 
 };
 
 export default function CodexPage() {
-  const [stats, setStats] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { stats, isLoading: loading } = usePlayer();
   const [activeCategory, setActiveCategory] = useState(() => {
     return localStorage.getItem('shiesty_codex_category') || "overview";
   });
 
   useEffect(() => {
-    const userKey = localStorage.getItem("arcTrackerUserKey");
-    const metaforgeId = localStorage.getItem("metaforgeUserId");
-    
-    setLoading(true);
-    fetchStats(userKey, metaforgeId).then(data => {
-      setStats(data || { raidHistory: [], machineCodex: {}, combatMetrics: {}, progression: {} });
-      setLoading(false);
-    }).catch(err => {
-      console.error("[Codex] Stats fetch failed:", err);
-      setStats({ error: err.message, raidHistory: [], machineCodex: {}, combatMetrics: {}, progression: {} });
-      setLoading(false);
-    });
-  }, []);
+    localStorage.setItem('shiesty_codex_category', activeCategory);
+  }, [activeCategory]);
 
   const shiestyMasterData = {
     profile: {
@@ -118,7 +107,7 @@ export default function CodexPage() {
     let timeTopsideSeconds = 0;
     let mapData: Record<string, any> = {};
 
-    const isShiesty = profileData.username === 'KonArtist' || profileData.username === 'SHiESTY' || true;
+    const isShiesty = profileData.username === 'KonArtist' || profileData.username === 'SHiESTY';
 
     raidHistory.forEach((r: any) => {
       const isExtraction = r.outcome === "extracted" || r.outcome === "SUCCESS" || r.outcome === "survived";
@@ -147,13 +136,13 @@ export default function CodexPage() {
     const hours = Math.floor(timeTopsideSeconds / 3600);
     const minutes = Math.floor((timeTopsideSeconds % 3600) / 60);
 
-    const mapArray = isShiesty ? shiestyMasterData.combat.mapPerformance.map(m => ({
+    const mapArray = (isShiesty && shiestyMasterData.combat.mapPerformance) ? shiestyMasterData.combat.mapPerformance.map(m => ({
       name: m.name,
       raids: m.total_raids,
       survivalRate: m.survival_rate,
       avgTime: m.avg_time,
       netIncome: m.total_profit
-    })) : (combatMetrics.mapPerformance?.length ? combatMetrics.mapPerformance.map((m: any) => ({
+    })) : (combatMetrics?.mapPerformance?.length ? combatMetrics.mapPerformance.map((m: any) => ({
       name: m.name || m.map_name || "Unknown",
       raids: m.total_raids || 0,
       survivalRate: m.survival_rate || 0,
@@ -166,7 +155,7 @@ export default function CodexPage() {
       netIncome: mapData[k].profit,
     })).sort((a, b) => b.raids - a.raids));
 
-    if (isShiesty) {
+    if (isShiesty && shiestyMasterData.combat) {
       return {
         totalRaids: 1609,
         extracted: 943,
@@ -219,8 +208,8 @@ export default function CodexPage() {
   }, [machineCodex]);
 
   const weaponChartData = useMemo(() => {
-    const isShiesty = profileData.username === 'KonArtist' || profileData.username === 'SHiESTY' || true;
-    if (isShiesty) return shiestyMasterData.combat.weapons;
+    const isShiesty = profileData.username === 'KonArtist' || profileData.username === 'SHiESTY';
+    if (isShiesty && shiestyMasterData.combat.weapons.length > 0) return shiestyMasterData.combat.weapons;
 
     const data: any[] = [];
     if (combatMetrics && combatMetrics.weapons) {
@@ -390,6 +379,22 @@ export default function CodexPage() {
 
                   {/* Quick Vitals */}
                   <div className="space-y-4">
+                     <div className="raider-box p-6 bg-[#050505] border-l-4 border-l-[#FFB800]">
+                        <div className="flex items-center gap-3 mb-4">
+                           <Target className="w-5 h-5 text-[#FFB800]" />
+                           <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Tactical Execution</h4>
+                        </div>
+                        <div className="space-y-2">
+                           <div className="flex justify-between text-[10px]">
+                              <span className="text-[#444] uppercase">Demon Streak</span>
+                              <span className="text-white font-bold">{stats?.combatMetrics?.demonStreak || 0}</span>
+                           </div>
+                           <div className="flex justify-between text-[10px]">
+                              <span className="text-[#444] uppercase">Max Yield Incident</span>
+                              <span className="text-[#39FF14] font-bold tracking-tight">${(stats?.combatMetrics?.maxYield || Math.max(...(raidHistory.map((r:any) => r.netValue || r.rdValue || 0).length ? raidHistory.map((r:any) => r.netValue || r.rdValue || 0) : [0]))).toLocaleString()}</span>
+                           </div>
+                        </div>
+                     </div>
                      <div className="raider-box p-6 bg-[#050505] border-l-4 border-l-[#FF073A]">
                         <div className="flex items-center gap-3 mb-4">
                            <HeartPulse className="w-5 h-5 text-[#FF073A]" />

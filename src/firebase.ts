@@ -44,7 +44,9 @@ const finalConfig = {
   appId: appId || (defaultFirebaseConfig as any).appId,
 };
 
-const databaseId = envDatabaseId || (defaultFirebaseConfig as any).firestoreDatabaseId || "(default)";
+// Defensive check for initialization
+const databaseId = envDatabaseId || (defaultFirebaseConfig as any).firestoreDatabaseId;
+const dbId = (!databaseId || databaseId === "(default)") ? undefined : databaseId;
 
 // Defensive check for initialization
 const hasMinimumConfig = !!finalConfig.projectId && !!finalConfig.apiKey;
@@ -60,6 +62,6 @@ const app = getApps().length > 0
       appId: "unset"
     });
 
-export const db = databaseId ? getFirestore(app, databaseId) : getFirestore(app);
+export const db = dbId ? getFirestore(app, dbId) : getFirestore(app);
 export const auth = getAuth(app);
 console.log("[Firebase] Services ready");

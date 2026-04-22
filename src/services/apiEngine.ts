@@ -70,7 +70,10 @@ export class ApiEngine {
           console.warn("[ApiEngine] Loadout fetch failed:", le.message);
         }
         
-        let stashRes = await fetchXboxStash(effectiveUserKey) || await fetchArcTracker('stash', 'per_page=500', effectiveUserKey);
+        let stashRes = await fetchXboxStash(effectiveUserKey);
+        if (!stashRes || stashRes.error || !stashRes.data) {
+          stashRes = await fetchArcTracker('stash', 'per_page=500', effectiveUserKey);
+        }
         const inventoryItems = []; // v1 fallback removed
         const stashItems = stashRes?.data?.items || stashRes?.items || [];
 

@@ -198,4 +198,10 @@ export default function SettingsPage() {
       </div>
 
       {message && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 bg-[#39FF14]/10 border border-[#39FF14]/30 text-[#3
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 bg-[#39FF14]/10 border border-[#39FF14]/30 text-[#39ff14] text-center uppercase tracking-widest text-xs font-bold mt-4">
+          {message}
+        </motion.div>
+      )}
+    </div>
+  );
+}

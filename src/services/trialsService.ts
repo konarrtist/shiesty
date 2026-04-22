@@ -46,15 +46,8 @@ export class TrialsService {
 
     const players = res.leaderboard || res.entries || [];
     
-    // FALLBACK DATA SYSTEM (SHiESTY RAiDERS EXCLUSIVE)
     if (players.length === 0) {
-      return [
-        { rank: 1, userId: 'shiesty-id-001', username: 'SHiESTY', score: 141305, tier: 'Cantina Legend', percentile: 100 },
-        { rank: 2, userId: 'rival-001', username: 'ARC_REAPER', score: 128400, tier: 'Cantina Legend', percentile: 99 },
-        { rank: 3, userId: 'rival-002', username: 'VOID_WALKER', score: 115000, tier: 'Daredevil I', percentile: 95 },
-        { rank: 4, userId: 'rival-003', username: 'SILENT_ONE', score: 98000, tier: 'Daredevil II', percentile: 90 },
-        { rank: 5, userId: 'rival-004', username: 'GOOP_MASTER', score: 87500, tier: 'Daredevil III', percentile: 85 }
-      ];
+      return [];
     }
 
     const total = players.length;

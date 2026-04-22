@@ -17,7 +17,7 @@ import {
 
 const BANNER_URL = "https://i.ibb.co/HTpb8xz4/IMG-1398.png";
 
-interface DashboardProps {
+
   setActiveTab: (tab: string) => void;
 }
 
@@ -71,7 +71,7 @@ export default function DashboardPage({ setActiveTab }: DashboardProps) {
              // Update essential dashboard state
              setProfile({ data: s.profile || {} });
         }
-    }, 600000); // 10 minutes
+    }, 1800000); // 30 minutes
 
     return () => clearInterval(pollInterval);
   }, []);
@@ -215,10 +215,10 @@ export default function DashboardPage({ setActiveTab }: DashboardProps) {
     return 0;
   };
 
-  const tokensValue = parseNum(profileData.tokens || profileData.extraction_tokens || 0);
+  const tokensValue = parseNum(profileData.tokens || profileData.extractionTokens || profileData.extraction_tokens || 0);
 
-  const xpInfo = parseNum(combatMetrics.total_xp || combatMetrics.xp || profileData.total_xp || profileData.xp || profileData.experience || profileData.tier_xp || 0);
-  const coinsValue = parseNum(profileData.coins || profileData.currency || profileData.space_dollars || 0);
+  const xpInfo = parseNum(combatMetrics.totalXp || combatMetrics.total_xp || combatMetrics.xp || profileData.totalXp || profileData.total_xp || profileData.xp || profileData.experience || profileData.tierXp || profileData.tier_xp || 0);
+  const coinsValue = parseNum(profileData.coins || profileData.currency || profileData.raiderDollars || profileData.space_dollars || profileData.raider_dollars || 0);
   const credsValue = parseNum(profileData.creds || 0);
 
   // Calculate Level and XP needed
@@ -228,11 +228,37 @@ export default function DashboardPage({ setActiveTab }: DashboardProps) {
   
   // LOADOUT LOGIC
   let currentLoadout: any = loadoutData;
+  if (!Array.isArray(currentLoadout) && currentLoadout?.data?.slots) {
+    currentLoadout = currentLoadout.data.slots.map((s: any) => {
+       if (!s.itemId || !s.item) return null;
+       
+       let attachments: any[] = [];
+       if (s.item?.attachments) {
+          attachments = s.item.attachments.map((att: any) => {
+              const attId = att?.item?.itemId || att?.itemId || att?.name;
+              return attId ? { name: attId.replace(/-/g, ' ').toUpperCase(), type: "MOD" } : null;
+          }).filter(Boolean);
+       } else if (s.slots) {
+          attachments = s.slots.map((as: any) => {
+              const asId = as.slots && as.slots[0] ? as.slots[0].itemId : null;
+              return asId ? { name: asId.replace(/-/g, ' ').toUpperCase(), type: "MOD" } : null;
+          }).filter(Boolean);
+       }
+
+       const rawName = s.item?.itemId || s.itemId;
+       return {
+         name: rawName.replace(/-/g, ' '),
+         rarity: s.item?.rarity || 'Common', // Raw payload doesn't provide explicit rarity without static lookup, fallback to common or derive from 'iii' suffix
+         slot: "EQUIP",
+         attachments: attachments.length > 0 ? attachments : null,
+         icon: `https://cdn.metaforge.app/arc-raiders/icons/${rawName}.webp`
+       };
+    }).filter(Boolean);
+  }
 
   return (
     <div className="relative min-h-screen">
-      <RaiderBackdrop imageUrl="https://i.ibb.co/rGVMbJXc/raider-render.jpg" />
-      <div className="relative z-10 min-h-screen bg-black/60 text-white selection:bg-[#39FF14] selection:text-black pb-20">
+      <div className="relative z-10 min-h-screen bg-transparent text-white selection:bg-[#39FF14] selection:text-black pb-20">
         
         {/* Raider Profile Header */}
         <div className="pt-20 px-4 md:px-8 max-w-7xl mx-auto">
@@ -303,14 +329,14 @@ export default function DashboardPage({ setActiveTab }: DashboardProps) {
         <div className="space-y-8 mb-12 px-4 md:px-8 max-w-7xl mx-auto">
           {/* SHiESTY TACTICAL STAT GRID */}
           <div className="stat-grid">
-              <StatCard icon={<Coins />} title="Net Profit" value={`$${parseNum(combatMetrics.total_profit || profileData.net_worth || 0).toLocaleString()}`} />
-              <StatCard icon={<Package />} title="Total Value" value={`$${parseNum(combatMetrics.total_value || profileData.total_value || 0).toLocaleString()}`} />
-              <StatCard icon={<ShieldCheck />} title="Extraction" value={`${combatMetrics.survival_rate || profileData.survival_rate || 0}%`} />
-              <StatCard icon={<Skull />} title="ARC Kills" value={parseNum(combatMetrics.total_kills || profileData.pve_kills || profileData.total_kills || 0).toLocaleString()} />
-              <StatCard icon={<Target />} title="PvP Kills" value={parseNum(combatMetrics.player_kills || profileData.pvp_kills || 0).toLocaleString()} />
-              <StatCard icon={<Database />} title="Containers" value={parseNum(combatMetrics.containers_opened || profileData.containers_looted || 0).toLocaleString()} />
+              <StatCard icon={<Coins />} title="Net Profit" value={`$${parseNum(combatMetrics.netProfit || profileData.net_worth || 0).toLocaleString()}`} />
+              <StatCard icon={<Package />} title="Total Profit" value={`$${parseNum(combatMetrics.totalProfit || profileData.total_value || 0).toLocaleString()}`} />
+              <StatCard icon={<ShieldCheck />} title="Extraction" value={`${combatMetrics.extractionRate || combatMetrics.survivalRate || profileData.survival_rate || 0}%`} />
+              <StatCard icon={<Skull />} title="ARC Kills" value={parseNum(combatMetrics.arcDestroyed || combatMetrics.totalKills || profileData.pve_kills || profileData.total_kills || 0).toLocaleString()} />
+              <StatCard icon={<Target />} title="PvP Kills" value={parseNum(combatMetrics.pvpKills || combatMetrics.player_kills || profileData.pvp_kills || 0).toLocaleString()} />
+              <StatCard icon={<Database />} title="Containers" value={parseNum(combatMetrics.containersLooted || profileData.containers_looted || 0).toLocaleString()} />
               <StatCard icon={<Trophy />} title="Trials Rank" value={`#${trials?.rank || "N/A"}`} />
-              <StatCard icon={<Zap />} title="Total Raids" value={parseNum(combatMetrics.total_raids || totalRounds || 0).toLocaleString()} />
+              <StatCard icon={<Zap />} title="Total Raids" value={parseNum(combatMetrics.totalRaids || combatMetrics.total_raids || totalRounds || 0).toLocaleString()} />
               <StatCard icon={<TrendingUp className="w-5 h-5" />} title="Raid Eff" value={`$${combatMetrics.raidEfficiency?.toLocaleString() || 0}/min`} />
               <StatCard icon={<Activity className="w-5 h-5" />} title="Demon Streak" value={combatMetrics.demonStreak || 0} />
               <StatCard icon={<Package className="w-5 h-5" />} title="Black Market" value={`$${Math.round(combatMetrics.blackMarketValue || 0).toLocaleString()}`} />
@@ -420,24 +446,27 @@ export default function DashboardPage({ setActiveTab }: DashboardProps) {
                <span className="text-[8px] font-black text-[#A1A1AA] tracking-[0.2em]">4-COLUMN_ACTIVE</span>
              </div>
               <div className="loadout-grid p-4">
-                {Array.isArray(currentLoadout) ? currentLoadout.map((item: any, idx: number) => (
+                {Array.isArray(currentLoadout) ? currentLoadout.map((item: any, idx: number) => {
+                    const rarityLabel = (item?.rarity || 'common').replace('rarity-', '').toLowerCase();
+                    const rarityClass = `rarity-${rarityLabel}`;
+                    return (
                     <div 
                       key={idx} 
                       data-raider-item={item?.name}
-                      data-raider-rarity={item?.rarity?.replace('rarity-', '')}
-                      className={`item-slot hud-corner group ${item.rarity || 'rarity-rare'}`}
+                      data-raider-rarity={rarityLabel}
+                      className={`item-slot hud-corner group ${rarityClass}`}
                     >
                       <span className="text-[7px] text-[#71717A] uppercase font-black absolute top-1 left-1">{item.slot || "EQUIPMENT"}</span>
                       {item && typeof item === 'object' ? (
                         <>
                           <img 
-                            src={item.icon || `https://cdn.metaforge.app/arc-raiders/icons/${(item.slug || item.name || '').toLowerCase().replace(/ /g, '-')}.webp`}
-                            alt={item.name} 
+                            src={item.icon || `https://cdn.metaforge.app/arc-raiders/icons/${(item.slug || (typeof item.name === 'object' ? item.name?.en : item.name) || '').toLowerCase().replace(/ /g, '-')}.webp`}
+                            alt={typeof item.name === 'object' ? item.name?.en : item.name} 
                             className="w-12 h-12 object-contain mb-1 drop-shadow group-hover:scale-110 transition-transform" 
                             onError={(e) => e.currentTarget.src = "https://cdn.metaforge.app/arc-raiders/icons/item-placeholder.webp"}
                             referrerPolicy="no-referrer"
                           />
-                          <span className="text-[8px] font-black text-white text-center w-full truncate px-1">{item.name}</span>
+                          <span className="text-[8px] font-black text-white text-center w-full truncate px-1">{typeof item.name === 'object' ? item.name?.en : item.name}</span>
                           {item.stats?.damage && <span className="text-[6px] text-[#FF073A] font-bold">{item.stats.damage}</span>}
                           {item.stats?.info && <span className="text-[6px] text-[#71717A] font-bold">{item.stats.info}</span>}
                           {item.quantity && <span className="text-[8px] text-[#00D1FF] font-bold absolute bottom-1 right-1">{item.quantity}</span>}
@@ -449,8 +478,8 @@ export default function DashboardPage({ setActiveTab }: DashboardProps) {
                                   <p className="text-[8px] font-black text-[#71717A] uppercase tracking-widest">TECHNICAL SPEC</p>
                                   <div className="w-2 h-2 bg-[#39FF14] animate-pulse" />
                                </div>
-                               <h4 className="text-[11px] font-black text-white uppercase mb-0.5">{item.name}</h4>
-                               <p className="text-[7px] text-[#39FF14] uppercase tracking-tighter mb-3">RARITY: {item.rarity?.replace('rarity-', '') || 'COMMON'}</p>
+                               <h4 className="text-[11px] font-black text-white uppercase mb-0.5">{typeof item.name === 'object' ? item.name?.en : item.name}</h4>
+                               <p className="text-[7px] text-[#39FF14] uppercase tracking-tighter mb-3">RARITY: {rarityLabel.toUpperCase()}</p>
                                
                                {item.attachments && (
                                  <div className="space-y-1 mt-2">
@@ -480,31 +509,73 @@ export default function DashboardPage({ setActiveTab }: DashboardProps) {
                         <span className="text-[9px] text-[#333] uppercase font-black">EMPTY</span>
                       )}
                     </div>
-                )) : (
-                  Object.entries(currentLoadout).map(([slot, item]: [string, any]) => (
+                );
+                }) : (
+                  Object.entries(currentLoadout).map(([slot, item]: [string, any]) => {
+                    const rarityLabel = (item?.rarity || 'common').replace('rarity-', '').toLowerCase();
+                    const rarityClass = `rarity-${rarityLabel}`;
+                    return (
                     <div 
                       key={slot} 
                       data-raider-item={item?.name}
-                      data-raider-rarity={item?.rarity?.replace('rarity-', '')}
-                      className={`item-slot hud-corner group ${item.rarity || 'rarity-rare'}`}
+                      data-raider-rarity={rarityLabel}
+                      className={`item-slot hud-corner group ${rarityClass}`}
                     >
                       <span className="text-[7px] text-[#71717A] uppercase font-black absolute top-1 left-1">{slot}</span>
                       {item && typeof item === 'object' ? (
                         <>
                           <img 
-                            src={item.icon || `https://cdn.metaforge.app/arc-raiders/icons/${(item.id || item.name || '').toLowerCase().replace(/ /g, '-')}.webp`}
-                            alt={item.name} 
+                            src={item.icon || `https://cdn.metaforge.app/arc-raiders/icons/${(item.id || (typeof item.name === 'object' ? item.name?.en : item.name) || '').toLowerCase().replace(/ /g, '-')}.webp`}
+                            alt={typeof item.name === 'object' ? item.name?.en : item.name} 
                             className="w-12 h-12 object-contain mb-1 drop-shadow group-hover:scale-110 transition-transform" 
                             onError={(e) => e.currentTarget.src = "https://cdn.metaforge.app/arc-raiders/icons/item-placeholder.webp"}
                             referrerPolicy="no-referrer"
                           />
-                          <span className="text-[8px] font-black text-white text-center w-full truncate px-1">{item.name}</span>
+                          <span className="text-[8px] font-black text-white text-center w-full truncate px-1">{typeof item.name === 'object' ? item.name?.en : item.name}</span>
+                          {item.stats?.damage && <span className="text-[6px] text-[#FF073A] font-bold">{item.stats.damage}</span>}
+                          {item.stats?.info && <span className="text-[6px] text-[#71717A] font-bold">{item.stats.info}</span>}
+                          {item.quantity && <span className="text-[8px] text-[#00D1FF] font-bold absolute bottom-1 right-1">{item.quantity}</span>}
+
+                          {/* Hardened Tooltip */}
+                          {(item.attachments || item.description || item.stats || item.upgrades) && (
+                            <div className="absolute z-[1000] left-full ml-4 top-0 w-48 bg-[#0a0f14]/98 backdrop-blur-xl border border-[#333] p-3 pointer-events-none opacity-0 group-hover:opacity-100 transition-all shadow-2xl">
+                               <div className="flex justify-between items-start mb-2 border-b border-[#222] pb-1">
+                                  <p className="text-[8px] font-black text-[#71717A] uppercase tracking-widest">TECHNICAL SPEC</p>
+                                  <div className="w-2 h-2 bg-[#39FF14] animate-pulse" />
+                               </div>
+                               <h4 className="text-[11px] font-black text-white uppercase mb-0.5">{typeof item.name === 'object' ? item.name?.en : item.name}</h4>
+                               <p className="text-[7px] text-[#39FF14] uppercase tracking-tighter mb-3">RARITY: {rarityLabel.toUpperCase()}</p>
+                               
+                               {(item.attachments || item.upgrades) && (
+                                 <div className="space-y-1 mt-2">
+                                   {(item.attachments || item.upgrades).map((att: any, idxChild: number) => (
+                                     <div key={idxChild} className="flex justify-between items-center gap-2 border-l border-[#222] pl-2">
+                                        <span className="text-[7px] text-[#444] uppercase">{att.type || 'MOD/AUG'}</span>
+                                        <span className="text-[8px] text-[#39FF14] font-bold">{typeof att.name === 'object' ? att.name?.en : att.name}</span>
+                                     </div>
+                                   ))}
+                                 </div>
+                               )}
+
+                               {item.description && (
+                                 <p className="mt-3 pt-2 border-t border-[#111] text-[8px] text-[#71717A] leading-tight italic font-serif">{typeof item.description === 'object' ? item.description?.en : item.description}</p>
+                               )}
+                               
+                               {item.stats?.damage && (
+                                 <div className="mt-2 flex justify-between items-center bg-[#FF073A]/10 px-2 py-0.5 border border-[#FF073A]/20">
+                                   <span className="text-[7px] text-[#FF073A] font-black">LETHALITY</span>
+                                   <span className="text-[9px] text-[#FF073A] font-black">{item.stats.damage}</span>
+                                 </div>
+                               )}
+                            </div>
+                          )}
                         </>
                       ) : (
                         <span className="text-[9px] text-[#333] uppercase font-black">EMPTY</span>
                       )}
                     </div>
-                  ))
+                  );
+                  })
                 )}
               </div>
           </div>
@@ -582,7 +653,13 @@ export default function DashboardPage({ setActiveTab }: DashboardProps) {
                   { label: "Scrappy", key: "Scrappy", max: 5 },
                   { label: "Stash Space", key: "Stash", max: 10 }
                 ].map((facility) => {
-                  const current = parseNum(facilities[facility.key] || facilities[facility.label]);
+                  const current = parseNum(
+                    typeof facilities === 'object' && !Array.isArray(facilities) 
+                      ? (facilities[facility.key] || facilities[facility.label])
+                      : (Array.isArray(facilities) 
+                          ? (facilities.find((f: any) => f.name === facility.key || f.name === facility.label)?.level)
+                          : 0)
+                  );
                   return (
                     <div key={facility.key} className="hideout-row">
                       <span className="text-[10px] font-data text-white uppercase w-24 sm:w-32">{facility.label}</span>

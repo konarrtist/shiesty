@@ -10,6 +10,7 @@ import MemberListPage from "./components/MemberListPage";
 import CodexPage from "./components/CodexPage";
 import SettingsPage from "./components/SettingsPage";
 import { RaiderBackdrop } from "./components/RaiderBackdrop";
+import { PlayerProvider } from "./context/PlayerContext";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -40,13 +41,15 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-[#050505] to-[#111]">
-      <RaiderBackdrop />
-      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
-      <main className="pb-20">
-        {renderPage()}
-      </main>
-    </div>
+    <PlayerProvider>
+      <div className="min-h-screen bg-gradient-to-br from-black via-[#050505] to-[#111]">
+        <RaiderBackdrop />
+        <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+        <main className="pb-20">
+          {renderPage()}
+        </main>
+      </div>
+    </PlayerProvider>
   );
 }
 

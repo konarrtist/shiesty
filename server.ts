@@ -84,8 +84,15 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // Bot managed by PM2 ecosystem
-  console.log("[Bot] Bot process managed by PM2 (shiesty-bot)");
+  if (process.env.DISCORD_BOT_TOKEN) {
+    console.log("[Bot] DISCORD_BOT_TOKEN found. Starting integrated bot process...");
+    // We already imported spawn from child_process
+    const botProcess = spawn('tsx', ['bot.ts'], { stdio: 'inherit' });
+    botProcess.on('error', (err) => console.error('[Bot] Start error:', err));
+    botProcess.on('exit', (code) => console.log(`[Bot] Process exited with code ${code}`));
+  } else {
+    console.log("[Bot] No DISCORD_BOT_TOKEN found. Bot will not start.");
+  }
   
   
   // Session middleware
@@ -566,10 +573,9 @@ async function startServer() {
       Use a cold, militaristic, tactical tone. Do not invent filler data.`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.1-pro-preview",
+        model: "gemini-2.5-flash",
         contents: prompt,
         config: { 
-            thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH },
             systemInstruction: "You are a cold, tactical advisor to a Raider Operative. Provide analytical, data-driven intelligence."
         }
       });

@@ -66,15 +66,10 @@ export async function fetchBlueprints(userKey) {
   const headers = userKey ? { 'x-user-key': userKey } : {};
   return await safeFetch(`${BASE_URL}/api/blueprints`, { headers });
 }
-export const fetchHideout = async (userKey: string) => {
-  try {
-    const response = await fetch("https://arctracker.io/api/v2/user/hideout", {
-      headers: {
-        "X-App-Key": APP_KEY,
-        "Authorization": `Bearer ${userKey}`,
-        "Accept": "application/json"
-      }
-    }
+export async function fetchHideout(userKey) {
+  const headers = userKey ? { 'x-user-key': userKey } : {};
+  return await safeFetch(`${BASE_URL}/api/hideout`, { headers });
+}
 
 export async function fetchStash(userKey) {
   const headers = userKey ? { 'x-user-key': userKey } : {};

@@ -83,9 +83,10 @@ export default function ItemsPage() {
 
   const getIconUrl = (item) => {
     if (item.icon && item.icon.startsWith('http')) return item.icon;
-    const cleanName = item.name?.replace(/ /g, '_');
+    const itemName = typeof item.name === 'object' ? item.name?.en : item.name;
+    const cleanName = itemName?.replace(/ /g, '_');
     const wikiUrl = `https://arcraiders.wiki/wiki/Special:FilePath/${cleanName}.png`;
-    const metaforgeId = (item.itemID || item.id || item.name?.replace(/ /g, '_').toLowerCase())?.replace('_blueprint', '').replace(/_/g, '-');
+    const metaforgeId = (item.itemID || item.id || itemName?.replace(/ /g, '_').toLowerCase())?.replace('_blueprint', '').replace(/_/g, '-');
     const metaforgeUrl = `https://cdn.metaforge.app/arc-raiders/icons/${metaforgeId}.webp`;
     
     // We'll return the wiki URL as primary because the user specifically requested wiki pictures
@@ -172,7 +173,7 @@ export default function ItemsPage() {
               animate={{ opacity: 1, scale: 1 }}
               whileHover={{ scale: 1.05, borderColor: "#39FF14", backgroundColor: "#111" }}
               whileTap={{ scale: 0.95, backgroundColor: "#39FF1422" }}
-              data-raider-item={item.name}
+              data-raider-item={typeof item.name === 'object' ? item.name?.en : item.name}
               data-raider-rarity={item.rarity}
               className={`raider-box cursor-pointer p-4 transition-all relative overflow-hidden group shiesty-interactive rarity-${(item.rarity || 'common').toLowerCase()} ${isSelectedForLoadout ? 'border-[#39FF14] border-2 bg-[#39FF14]/10' : ''}`}
             >
@@ -188,14 +189,15 @@ export default function ItemsPage() {
 
               <img 
                 src={getIconUrl(item)} 
-                alt={item.name} 
+                alt={typeof item.name === 'object' ? item.name?.en : item.name} 
                 className={`w-16 h-16 mx-auto mb-3 object-contain transition-transform group-hover:scale-110`} 
                 referrerPolicy="no-referrer"
                 onError={(e) => { 
                    const currentUrl = e.currentTarget.src;
                    if (currentUrl.includes('arcraiders.wiki')) {
                       // Try MetaForge instead
-                      const mfId = (item.itemID || item.id || item.name?.replace(/ /g, '_').toLowerCase())?.replace('_blueprint', '').replace(/_/g, '-');
+                      const itemName = typeof item.name === 'object' ? item.name?.en : item.name;
+                      const mfId = (item.itemID || item.id || itemName?.replace(/ /g, '_').toLowerCase())?.replace('_blueprint', '').replace(/_/g, '-');
                       e.currentTarget.src = `https://cdn.metaforge.app/arc-raiders/icons/${mfId}.webp`;
                    } else {
                       e.currentTarget.src = "https://cdn.metaforge.app/arc-raiders/icons/item-placeholder.webp"; 
@@ -209,7 +211,7 @@ export default function ItemsPage() {
                     {item.rarity?.toUpperCase() || 'COMMON'}
                   </span>
                 </div>
-                <p className="text-[10px] font-black text-white truncate uppercase mb-1">{item.name}</p>
+                <p className="text-[10px] font-black text-white truncate uppercase mb-1">{typeof item.name === 'object' ? item.name?.en : item.name}</p>
                 <p className="text-[8px] text-[#444] font-mono truncate">ID: {item.itemID || item.id || 'N/A'}</p>
                 
                 <div className="flex justify-between items-center bg-[#111] px-2 py-1 mt-2 border border-[#222]">
@@ -279,7 +281,7 @@ export default function ItemsPage() {
                    <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent" />
                    <img 
                       src={getIconUrl(selectedItem)} 
-                      alt={selectedItem.name} 
+                      alt={typeof selectedItem.name === 'object' ? selectedItem.name?.en : selectedItem.name} 
                       className={`w-32 h-32 object-contain relative z-10`}
                       referrerPolicy="no-referrer"
                    />
@@ -328,7 +330,7 @@ export default function ItemsPage() {
                 <div className="w-full md:w-2/3 p-6 flex flex-col max-h-[80vh] overflow-y-auto">
                    <div className="flex justify-between items-start mb-6 border-b border-[#222] pb-4">
                       <div>
-                        <h2 className="text-2xl font-black uppercase text-white tracking-widest">{selectedItem.name}</h2>
+                        <h2 className="text-2xl font-black uppercase text-white tracking-widest">{typeof selectedItem.name === 'object' ? selectedItem.name?.en : selectedItem.name}</h2>
                         <p className="text-[10px] text-[#71717A] font-data tracking-widest uppercase mt-1">ID: {selectedItem.itemID || selectedItem.id}</p>
                       </div>
                       <button onClick={() => setSelectedItem(null)} className="p-2 bg-[#111] hover:bg-[#FF073A] text-[#71717A] hover:text-white transition-colors border border-[#222]">

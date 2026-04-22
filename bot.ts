@@ -32,22 +32,10 @@ async function trackRaids() {
         const usersRef = collection(db, 'users');
         // Test connectivity gracefully
         try {
-            await getDocs(query(usersRef, where('arcTrackerKey', '!=', ''), limit(1));
-        // Test connectivity first
-        try {
             await getDocs(query(usersRef, where('arcTrackerKey', '!=', ''), limit(1)));
-        } catch (e: any) {
-            if (e.code === 'not-found') {
-                console.log('[Bot] Users collection not yet created (Normal for fresh app)');
-            } else {
-                console.error('[Bot] Firestore connectivity error:', e.message);
-            }
-            return;
-        }
-
-        } catch (connError) {
+        } catch (connError: any) {
             if (connError.code === 'not-found') {
-                console.log('[Bot] Users collection not initialized yet. Run: tsx seed.ts');
+                console.log('[Bot] Users collection not initialized yet.');
                 return;
             }
             throw connError;
@@ -154,25 +142,40 @@ client.on('messageCreate', async (message) => {
     if (message.content === '!market') {
         try {
             const storeRes = await axios.get(`${APP_URL}/api/public-store`);
-            const listings = storeRes.data || [];
-            const featured = listings.slice(0, 5);
+            const trader = storeRes.data?.trader || 'Anonymous';
+            const listings = storeRes.data?.inventory || [];
+            
+            // Highlight valuable items or blueprints
+            const featured = listings
+                .filter((i: any) => i.name.includes('Blueprint') || i.rarity === 'Legendary' || i.rarity === 'Epic' || i.rarity === 'rarity-epic')
+                .slice(0, 5);
+            
+            if (featured.length === 0 && listings.length > 0) {
+                featured.push(...listings.slice(0, 5));
+            }
             
             const marketEmbed = new EmbedBuilder()
-                .setTitle('⚖️ MARKET INTELLIGENCE')
+                .setTitle('⚖️ SHiESTY TRADING POST')
                 .setColor(0xFFB800)
-                .setDescription('Latest high-value listings synced from the Raider Codex.');
+                .setDescription(`Latest high-value supply synced from **${trader}**'s Stash.`);
             
-            featured.forEach((item: any) => {
-                marketEmbed.addFields({ 
-                    name: `${item.name} (x${item.count})`, 
-                    value: `Price: **$${item.price.toLocaleString()}** | Seller: ${item.sellerName || 'Anonymous'}`,
-                    inline: false 
+            if (featured.length === 0) {
+                marketEmbed.addFields({ name: 'Inventory Empty', value: 'No items currently in stock.' });
+            } else {
+                featured.forEach((item: any) => {
+                    const rarityClean = (item.rarity || 'Common').replace('rarity-', '').toUpperCase();
+                    marketEmbed.addFields({ 
+                        name: `${item.name} (x${item.quantity})`, 
+                        value: `Rarity: **${rarityClean}**`,
+                        inline: false 
+                    });
                 });
-            });
+            }
 
             message.reply({ embeds: [marketEmbed] });
-        } catch (e) {
-            message.reply('⚠️ Marketplace data stream corrupted.');
+        } catch (e: any) {
+            console.error('[Bot Market Error]', e.message);
+            message.reply('⚠️ Marketplace data stream corrupted or offline.');
         }
     }
 });

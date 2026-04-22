@@ -212,8 +212,8 @@ export default function RaidsPage() {
                className="bg-[#050505] border border-[#222] flex flex-col md:flex-row hover:border-[#444] transition-colors"
               >
                  {/* Map Area */}
-                 <div className="w-full md:w-32 h-20 md:h-autorelative flex-shrink-0 bg-[#0A0A0A] border-r border-[#222] relative overflow-hidden flex items-center justify-center p-2">
-                    <img src={getMapImageUrl(mName)} className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-luminosity" onError={(e) => e.currentTarget.style.display = 'none'} />
+                 <div className="w-full md:w-32 h-20 md:h-auto md:min-h-full flex-shrink-0 bg-[#0A0A0A] border-r border-[#222] relative overflow-hidden flex items-center justify-center p-2">
+                    <img src={getMapImageUrl(mName)} className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-luminosity" onError={(e) => e.currentTarget.style.display = 'none'} />
                     <span className="relative z-10 font-black text-white text-center text-xs uppercase drop-shadow-md">{mName}</span>
                  </div>
                  

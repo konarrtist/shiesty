@@ -1,46 +1,6 @@
-# SHiESTY🔻RAiDERS - Arc Raiders Discord Bot & Dashboard
+# Getting Started with Create React App
 
-Full-stack app: React/Vite frontend, Express/TS backend, Discord bot, Firebase Firestore, Arc/Xbox APIs, Gemini AI insights.
-
-**Repo**: https://github.com/konarrtist/shiestyproject | Local origin: https://github.com/konarrtist/shiestyai.git
-
-## Quick Local Setup (Mac)
-
-1. **Keys**: `cp .env.example .env` & fill:
-   - ARCTRACKER_APP_KEY/USER_KEY (https://arctracker.gg)
-   - DISCORD_* (app invite + bot token)
-   - GEMINI_API_KEY (Google AI Studio)
-   - etc. (see check_env.ts)
-
-2. **Install & Run**:
-   ```
-   npm install
-   node check_env.ts  # Verify SET
-   npm run dev  # http://localhost:3000
-   ```
-
-3. **Prod Sim (PM2)**:
-   ```
-   pm2 start ecosystem.config.js
-   pm2 logs
-   ```
-
-## Test
-```
-curl localhost:3000/ping  # pong
-curl 'localhost:3000/api/stats?userKey=arc_u...'
-```
-
-## Deploy EC2 Ubuntu
-See TODO.md.
-
-## Features
-- Dashboard: Stats, Leaderboards, Trials, Raids, Store, Reputation
-- Bot: Discord raids/events (PM2)
-- Services: Xbox profile/stash, MetaForge, ARDB
-
-See TODO.md for fixes.
-
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
 

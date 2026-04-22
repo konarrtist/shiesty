@@ -1,59 +1,41 @@
-# SHiESTY RAiDERS - Fix Dashboard Stats + 502 ERROR
-Status: 🟡 In Progress (BLACKBOXAI)
+ou # SHiESTY RAiDERS - PRODUCTION READINESS
+Status: 🔄 In Progress (BLACKBOXAI - blackboxai/prod-ready)
 
-## [ ] 1. Environment Setup (.env)
-```
-cp oldWORKING-env .env
-# Edit .env → ADD your personal:
-# ARCTRACKER_USER_KEY=your_key_from_arctracker.io
-# VITE_METAFORGE_USER_ID=your_uuid_from_metaforge.app/profile
-```
+## Logical Steps from Approved Plan
 
-## [x] 2. Server Startup (Fixed)
-```
-npm install
-node check_env.ts  # Should show SET for keys
-npm run dev        # or tsx server.ts → localhost:3000/ping → pong
-```
+### [ ] 1. SECURITY FIXES
+- [ ] Backup & delete `serviceAccountKey.json.json` (Firebase creds exposed)
+- [ ] Update `.gitignore` → add `serviceAccountKey*` + Discord secrets
+- [ ] Verify no other secrets: `git log --oneline -50 | grep -i secret` / search_files
 
-## [ ] 3. Test Settings → Dashboard Flow
-```
-1. localhost:3000/settings
-2. LINK DISCORD (or manual mode after fix)
-3. Input keys → SAVE
-4. Go Dashboard → Stats/Loadout/Raids populate
-5. Console: localStorage.getItem('arcTrackerUserKey')
-```
+### [ ] 2. ENV & CONFIG
+- [ ] Create `.env` from `oldWORKING-env` + add Discord secrets:
+  ```
+  DISCORD_CLIENT_ID=1493350426983006229
+  DISCORD_CLIENT_SECRET=_qqXIKPb9-NQwZrl7pSHvgFZ-uhm6F_k
+  DISCORD_BOT_TOKEN=MTQ5MzM1MDQyNjk4MzAwNjIyOQ.G4W6IV.oQMmKGaalOV-GKYrjCbG74_IFwaruwGQ5NsqCw
+  DISCORD_PUBLIC_KEY=57e69d47303b378e8db3877229126e3157b019a969088f5ba7a206a12e89b575
+  # Add your: ARCTRACKER_USER_KEY, VITE_METAFORGE_USER_ID, GEMINI_API_KEY, VITE_BACKEND_URL
+  ```
+- [ ] `node check_env.ts` → confirm all SET
 
-## [ ] 4. Fix 502 (Vercel → PM2/EC2)
-```
-pm2 start ecosystem.config.js
-# Logs: pm2 logs shiesty-raiders
-```
 
-## [ ] 5. Prod Deploy EC2
-```
-ssh ubuntu@your-ec2
-cd shiesty-raiders
-git pull
-npm ci
-npm run build
-pm2 restart ecosystem.config.js
-```
+### [ ] 4. TEST CORE FEATURES
+- [ ] `npm run lint && npx tsc --noEmit && npm run build`
+- [ ] `npm run preview` → test marketplace/login
+- [ ] Start dev: `npm run dev`
+- [ ] Test pages: Login Discord → Settings keys → Dashboard sync → Store create listing
+- [ ] Marketplace: Verify `/api/public-store`, MarketService listings
+- [ ] All nav consistent (confirmed)
 
-## 🔍 DEBUG COMMANDS
-```
-# Test API direct
-curl 'localhost:3000/api/stats?userKey=arc_u1_n6BApGMOBtzF9TULvhqa3dTMF2-MPHr5'
+### [ ] 5. GIT & DEPLOY PREP
+- [ ] `git checkout -b blackboxai/prod-ready`
+- [ ] Commit fixes
+- [ ] EC2/PM2: Per TODO_PROGRESS.md (ssh, git pull, npm ci, pm2 restart)
 
-# Check localStorage (F12 Console)
-localStorage.getItem('arcTrackerUserKey')
+### [ ] 6. FINAL VERIFICATION
+- [ ] No console errors, responsive, Firebase rules prod-ready
+- [ ] Health: `/ping` → pong
 
-# Manual keys (emergency)
-localStorage.setItem('arcTrackerUserKey', 'arc_u1_n6BApGMOBtzF9TULvhqa3dTMF2-MPHr5')
-localStorage.setItem('metaforgeUserId', '9888be36-c71f-4f79-8693-72a0720d105f')
-location.reload()
-```
-
-**Next Step**: Create `.env` → `npm run dev` → test Settings.
+**Progress tracked here. Next: Security → Env → Build**
 

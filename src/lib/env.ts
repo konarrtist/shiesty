@@ -19,6 +19,3 @@ export const getEnv = () => {
 };
 
 export const env = getEnv();
-
-export const xboxToken = env.EMBARK_SESSION_TOKEN || env.VITE_EMBARK_SESSION_TOKEN;
-export const arcStoreKey = env.ARCTRACKER_STORE_KEY || env.VITE_ARCTRACKER_STORE_KEY;
